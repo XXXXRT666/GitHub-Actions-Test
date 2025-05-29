@@ -31,7 +31,8 @@ jobs:
       - name: Failed Job
         shell: bash
         run: |
-          exit 1
+          exit 0
+          # exit 1
 
       - name: Run Build and Upload Script
         shell: bash
