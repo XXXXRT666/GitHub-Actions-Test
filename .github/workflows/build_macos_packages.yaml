@@ -37,5 +37,5 @@ jobs:
       - name: Run Build and Upload Script
         shell: bash
         run: |
-          ls ../ffmpeg-cache
-          cat ../ffmpeg-cache/111
+          ls ~/ffmpeg-cache
+          cat ~/ffmpeg-cache/111
