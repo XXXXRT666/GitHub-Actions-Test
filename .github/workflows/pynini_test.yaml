@@ -1,0 +1,40 @@
+name: Explore Pynini Installation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install-and-list:
+    runs-on: windows-latest
+
+    steps:
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: 3.10
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: pynini-env
+        auto-update-conda: true
+
+    - name: Install pynini
+      shell: bash
+      run: |
+        conda install -y pynini -c conda-forge
+
+    - name: Show env location
+      shell: bash
+      run: |
+        echo "ENV PREFIX:" $CONDA_PREFIX
+
+    - name: List directory structure (like 'tree') under env
+      shell: bash
+      run: |
+        echo "Installed directory structure under conda env:"
+        du -ah $CONDA_PREFIX | sort -h | tail -n 100
+
+    - name: List packages as files
+      shell: bash
+      run: |
+        echo "Packages installed to site-packages:"
+        find $CONDA_PREFIX/Lib/site-packages -type f | sort
