@@ -1,51 +1,50 @@
-name: Conda Env Diff on pynini Install
+name: Build Pynini Environment
 
 on:
   workflow_dispatch:
 
 jobs:
-  conda-diff:
+  setup-conda-env:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout Repo
       uses: actions/checkout@v4
 
-    - name: Download Miniconda Installer
-      shell: powershell
-      run: |
-        Invoke-WebRequest -Uri "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe" -OutFile "miniconda.exe"
-
-    - name: Install Miniconda to conda-env/
-      shell: powershell
-      run: |
-        Start-Process -Wait -FilePath ".\miniconda.exe" -ArgumentList '/S','/InstallationType=JustMe','/AddToPath=0','/RegisterPython=0','/D=%cd%\conda-env'
-
-    - name: Create clean Python 3.10 env at base-env/
-      shell: powershell
-      run: |
-        $env:PATH = "$PWD\conda-env;$PWD\conda-env\Library\bin;$PWD\conda-env\Scripts;$env:PATH"
-        & "$PWD\conda-env\Scripts\conda.exe" create -y -p "$PWD\base-env" python=3.10
-
-    - name: Copy base-env as before-env snapshot
-      shell: powershell
-      run: |
-        robocopy "$PWD\base-env" "$PWD\before-env" /E
-
-    - name: Install pynini into base-env
-      shell: powershell
-      run: |
-        & "$PWD\conda-env\Scripts\conda.exe" install -y -p "$PWD\base-env" -c conda-forge pynini
-
-    - name: Compare before-env and base-env (recursive diff)
-      shell: powershell
-      run: |
-        $before = Get-ChildItem "$PWD\before-env" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length
-        $after  = Get-ChildItem "$PWD\base-env"   -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length
-        Compare-Object -ReferenceObject $before -DifferenceObject $after -Property FullName, Length | Out-File env_diff.txt
-
-    - name: Upload file diff result
-      uses: actions/upload-artifact@v4
+    - name: Install Mambaforge
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        name: env-diff
-        path: env_diff.txt
+        miniconda-version: "latest"
+        environment-file: ""
+        auto-activate-base: false
+
+    - name: Create Conda Env in tmp/conda-env
+      shell: cmd
+      run: |
+        mkdir tmp
+        conda create -y -p tmp\conda-env python=3.10
+        call conda activate tmp\conda-env
+        conda install -y -p tmp\conda-env -c conda-forge pynini=2.1.6
+
+    - name: Copy selected DLLs to ../DLLs
+      shell: pwsh
+      run: |
+        $srcDLLs = @(
+          'tmp/conda-env/Library/bin/dl.dll',
+          'tmp/conda-env/Library/bin/fst.dll',
+          'tmp/conda-env/Library/bin/fstfar.dll',
+          'tmp/conda-env/Library/bin/fstfarscript.dll',
+          'tmp/conda-env/Library/bin/fstmpdtscript.dll',
+          'tmp/conda-env/Library/bin/fstpdtscript.dll',
+          'tmp/conda-env/Library/bin/fstscript.dll'
+        )
+        $dstDir = "DLLs"
+        mkdir $dstDir -ea 0 | Out-Null
+        foreach ($dll in $srcDLLs) {
+          if (Test-Path $dll) {
+            Copy-Item $dll -Destination $dstDir -Force
+          } else {
+            Write-Host "Missing: $dll"
+          }
+        }
+        ls DLLs
