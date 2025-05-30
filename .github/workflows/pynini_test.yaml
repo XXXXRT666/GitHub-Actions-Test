@@ -1,40 +1,51 @@
-name: Explore Pynini Installation
+name: Conda Env Diff on pynini Install
 
 on:
   workflow_dispatch:
 
 jobs:
-  install-and-list:
+  conda-diff:
     runs-on: windows-latest
 
     steps:
-    - name: Set up Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download Miniconda Installer
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Uri "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe" -OutFile "miniconda.exe"
+
+    - name: Install Miniconda to conda-env/
+      shell: powershell
+      run: |
+        Start-Process -Wait -FilePath ".\miniconda.exe" -ArgumentList '/S','/InstallationType=JustMe','/AddToPath=0','/RegisterPython=0','/D=%cd%\conda-env'
+
+    - name: Create clean Python 3.10 env at base-env/
+      shell: powershell
+      run: |
+        $env:PATH = "$PWD\conda-env;$PWD\conda-env\Library\bin;$PWD\conda-env\Scripts;$env:PATH"
+        & "$PWD\conda-env\Scripts\conda.exe" create -y -p "$PWD\base-env" python=3.10
+
+    - name: Copy base-env as before-env snapshot
+      shell: powershell
+      run: |
+        robocopy "$PWD\base-env" "$PWD\before-env" /E
+
+    - name: Install pynini into base-env
+      shell: powershell
+      run: |
+        & "$PWD\conda-env\Scripts\conda.exe" install -y -p "$PWD\base-env" -c conda-forge pynini
+
+    - name: Compare before-env and base-env (recursive diff)
+      shell: powershell
+      run: |
+        $before = Get-ChildItem "$PWD\before-env" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length
+        $after  = Get-ChildItem "$PWD\base-env"   -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length
+        Compare-Object -ReferenceObject $before -DifferenceObject $after -Property FullName, Length | Out-File env_diff.txt
+
+    - name: Upload file diff result
+      uses: actions/upload-artifact@v4
       with:
-        python-version: "3.10"
-        channels: conda-forge
-        channel-priority: strict
-        activate-environment: pynini-env
-        auto-update-conda: true
-
-    - name: Install pynini
-      shell: bash
-      run: |
-        conda install -y pynini -c conda-forge
-
-    - name: Show env location
-      shell: bash
-      run: |
-        echo "ENV PREFIX:" $CONDA_PREFIX
-
-    - name: List directory structure (like 'tree') under env
-      shell: bash
-      run: |
-        echo "Installed directory structure under conda env:"
-        du -ah $CONDA_PREFIX | sort -h | tail -n 100
-
-    - name: List packages as files
-      shell: bash
-      run: |
-        echo "Packages installed to site-packages:"
-        find $CONDA_PREFIX/Lib/site-packages -type f | sort
+        name: env-diff
+        path: env_diff.txt
