@@ -24,11 +24,12 @@ jobs:
         mkdir conda-env
         conda create -y -p .\conda-env python=3.10
         call conda activate .\conda-env
-        conda install -y -c conda-forge pynini=2.1.6
 
     - name: Copy selected DLLs to ../DLLs
       shell: pwsh
       run: |
+        conda activate D:\a\GitHub-Actions-Test\GitHub-Actions-Test\conda-env
+        conda install -y -c conda-forge pynini=2.1.6
         ls conda-env/Library
         $srcDLLs = @(
           'conda-env/Library/bin/dl.dll',
