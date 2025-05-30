@@ -18,26 +18,26 @@ jobs:
         environment-file: ""
         auto-activate-base: true
 
-    - name: Create Conda Env in tmp/conda-env
+    - name: Create Conda Env in conda-env
       shell: cmd
       run: |
-        mkdir tmp
-        conda create -y -p tmp\conda-env python=3.10
-        call conda activate tmp\conda-env
-        conda install -y -p tmp\conda-env -c conda-forge pynini=2.1.6
+        mkdir conda-env
+        conda create -y -p .\conda-env python=3.10
+        call conda activate .\conda-env
+        conda install -y -c conda-forge pynini=2.1.6
 
     - name: Copy selected DLLs to ../DLLs
       shell: pwsh
       run: |
-        ls tmp/conda-env/Library
+        ls conda-env/Library
         $srcDLLs = @(
-          'tmp/conda-env/Library/bin/dl.dll',
-          'tmp/conda-env/Library/bin/fst.dll',
-          'tmp/conda-env/Library/bin/fstfar.dll',
-          'tmp/conda-env/Library/bin/fstfarscript.dll',
-          'tmp/conda-env/Library/bin/fstmpdtscript.dll',
-          'tmp/conda-env/Library/bin/fstpdtscript.dll',
-          'tmp/conda-env/Library/bin/fstscript.dll'
+          'conda-env/Library/bin/dl.dll',
+          'conda-env/Library/bin/fst.dll',
+          'conda-env/Library/bin/fstfar.dll',
+          'conda-env/Library/bin/fstfarscript.dll',
+          'conda-env/Library/bin/fstmpdtscript.dll',
+          'conda-env/Library/bin/fstpdtscript.dll',
+          'conda-env/Library/bin/fstscript.dll'
         )
         $dstDir = "DLLs"
         mkdir $dstDir -ea 0 | Out-Null
