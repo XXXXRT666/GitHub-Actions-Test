@@ -25,10 +25,6 @@ jobs:
         with:
           compiler: clang
 
-      # 配置 MSVC 开发环境（提供 cl.exe 等）
-      - name: Setup MSVC Dev Cmd
-        uses: ilammy/msvc-dev-cmd@v1
-
       # 使用 GCC 编译并运行
       - name: Build and run with GCC
         shell: bash
@@ -53,8 +49,8 @@ jobs:
 
       # 使用 MSVC 编译并运行
       - name: Build and run with MSVC
-        shell: bash
+        shell: cmd
         run: |
-          echo "Using MSVC (cl.exe)"
+          echo Using MSVC (cl.exe)
           cl /O2 /GL /DNDEBUG /std:c++17 /EHsc quicksort_bench.cpp /Fe:quicksort_msvc.exe
-          ./quicksort_msvc.exe
+          quicksort_msvc.exe
