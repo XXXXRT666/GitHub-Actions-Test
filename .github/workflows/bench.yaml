@@ -1,0 +1,64 @@
+name: Quicksort Benchmarks (Windows)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 安装 GCC（通过 Chocolatey，由 action 封装）
+      - name: Install GCC
+        id: gcc
+        uses: rlalik/setup-cpp-compiler@master
+        with:
+          compiler: gcc-latest
+
+      # 安装 Clang（同样通过 Chocolatey）
+      - name: Install Clang
+        id: clang
+        uses: rlalik/setup-cpp-compiler@master
+        with:
+          compiler: clang
+
+      # 配置 MSVC 开发环境（提供 cl.exe 等）
+      - name: Setup MSVC Dev Cmd
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # 使用 GCC 编译并运行
+      - name: Build and run with GCC
+        shell: bash
+        env:
+          CC: ${{ steps.gcc.outputs.cc }}
+          CXX: ${{ steps.gcc.outputs.cxx }}
+        run: |
+          echo "Using GCC: $CXX"
+          "$CXX" -O3 -DNDEBUG -std=c++17 quicksort_bench.cpp -o quicksort_gcc.exe
+          ./quicksort_gcc.exe
+
+      # 使用 Clang 编译并运行
+      - name: Build and run with Clang
+        shell: bash
+        env:
+          CC: ${{ steps.clang.outputs.cc }}
+          CXX: ${{ steps.clang.outputs.cxx }}
+        run: |
+          echo "Using Clang: $CXX"
+          "$CXX" -O3 -DNDEBUG -std=c++17 quicksort_bench.cpp -o quicksort_clang.exe
+          ./quicksort_clang.exe
+
+      # 使用 MSVC 编译并运行
+      - name: Build and run with MSVC
+        shell: bash
+        run: |
+          echo "Using MSVC (cl.exe)"
+          cl /O2 /GL /DNDEBUG /std:c++17 /EHsc quicksort_bench.cpp /Fe:quicksort_msvc.exe
+          ./quicksort_msvc.exe
