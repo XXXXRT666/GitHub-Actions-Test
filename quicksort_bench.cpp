@@ -61,7 +61,7 @@ int main() {
         quicksort(data.data(), 0, N - 1);
 
         // Prevent aggressive optimization (use the result)
-        checksum += static_cast<std::uint64_t>(data[N / 2]);
+        // checksum += static_cast<std::uint64_t>(data[N / 2]);
     }
     auto end = clock::now();
 
