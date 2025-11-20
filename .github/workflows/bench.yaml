@@ -37,7 +37,7 @@ jobs:
           CXX: ${{ steps.gcc.outputs.cxx }}
         run: |
           echo "Using GCC: $CXX"
-          "$CXX" -O3 -DNDEBUG -std=c++17 quicksort_bench.cpp -o quicksort_gcc.exe
+          "$CXX" -O3 -march=native -mtune=native -ffast-math -funroll-loops -fomit-frame-pointer -DNDEBUG -std=c++17 quicksort_bench.cpp -o quicksort_gcc.exe
           ./quicksort_gcc.exe
 
       # 使用 Clang 编译并运行
@@ -48,7 +48,7 @@ jobs:
           CXX: ${{ steps.clang.outputs.cxx }}
         run: |
           echo "Using Clang: $CXX"
-          "$CXX" -O3 -DNDEBUG -std=c++17 quicksort_bench.cpp -o quicksort_clang.exe
+          "$CXX" -O3 -march=native -mtune=native -ffast-math -funroll-loops -fomit-frame-pointer -DNDEBUG -std=c++17 quicksort_bench.cpp -o quicksort_clang.exe
           ./quicksort_clang.exe
 
       # 使用 MSVC 编译并运行
@@ -56,5 +56,5 @@ jobs:
         shell: cmd
         run: |
           echo Using MSVC (cl.exe)
-          cl /O2 /GL /DNDEBUG /std:c++17 /EHsc quicksort_bench.cpp /Fe:quicksort_msvc.exe
+          cl /O2 /GL /Oi /Ot /Oy /Ob3 /arch:AVX2 /fp:fast /DNDEBUG /std:c++17 quicksort_bench.cpp /Fe:quicksort_msvc.exe
           quicksort_msvc.exe
