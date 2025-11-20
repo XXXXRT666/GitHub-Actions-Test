@@ -25,6 +25,10 @@ jobs:
         with:
           compiler: clang
 
+      # 配置 MSVC 开发环境（提供 cl.exe 等）
+      - name: Setup MSVC Dev Cmd
+        uses: ilammy/msvc-dev-cmd@v1
+
       # 使用 GCC 编译并运行
       - name: Build and run with GCC
         shell: bash
